@@ -33,8 +33,11 @@ centralized-logs:
   sender:
     enabled: true
 
-  # ── Opciones avanzadas ────────────────────────────────────
-  body-max-size: 10000
+  # ── Compresión GZIP ──────────────────────────────────────
+  # false (default) → JSON plano, legible directo de la cola
+  # true            → GZIP comprimido, ahorra espacio, el consumidor debe descomprimir
+  compression:
+    enabled: false
 
   # ── Endpoint Mappings ─────────────────────────────────────
   # Mapea patrones "METHOD /path" a identificadores descriptivos.

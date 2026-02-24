@@ -53,6 +53,7 @@ centralized-logs.sender.enabled=true
 # ── Opciones avanzadas ────────────────────────────────────
 centralized-logs.body-max-size=10000
 centralized-logs.interceptor.exclude-paths=/actuator/**,/health,/swagger-ui/**,/v3/api-docs/**
+centralized-logs.compression.enabled=false
 ```
 
 ---
@@ -73,6 +74,7 @@ centralized-logs.interceptor.exclude-paths=/actuator/**,/health,/swagger-ui/**,/
 | `centralized-logs.body-max-size` | ❌ | `10000` | Tamaño máximo (en caracteres) del body capturado |
 | `centralized-logs.interceptor.exclude-paths` | ❌ | `/actuator/**,/health,...` | Rutas excluidas del interceptor |
 | `centralized-logs.endpoint-mappings` | ❌ | `{}` | Mapa de endpoints a IDs descriptivos (ver sección abajo) |
+| `centralized-logs.compression.enabled` | ❌ | `false` | Activa compresión GZIP de mensajes en cola |
 
 ---
 
@@ -101,6 +103,29 @@ false → Interceptor captura y loguea en consola, pero NO envía a Artemis ✗
 | Producción completa | `true` | `true` |
 | Sin Artemis disponible (desarrollo) | `true` | `false` |
 | Deshabilitar completamente | `false` | `true` o `false` |
+
+---
+
+## Compresión GZIP
+
+### `centralized-logs.compression.enabled`
+
+Controla si los mensajes JSON se comprimen con GZIP antes de enviarse a la cola.
+
+```
+false (default) → TextMessage con JSON plano (legible directamente)
+true            → BytesMessage con GZIP (ahorra espacio, sin perder datos)
+```
+
+Cuando la compresión está activa:
+- El mensaje se envía como `BytesMessage` con header `Content-Encoding: gzip`
+- El consumidor debe descomprimir con GZIP antes de leer el JSON
+- **No se pierde ningún dato** — el body completo del request/response queda intacto
+
+| Escenario | `compression.enabled` | Formato en cola |
+|---|---|---|
+| Desarrollo / debugging | `false` | JSON plano, legible |
+| Producción (optimizar espacio) | `true` | GZIP comprimido |
 
 ---
 

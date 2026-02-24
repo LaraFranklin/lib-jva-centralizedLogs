@@ -101,7 +101,8 @@ public class LogEventBuilder {
         logEvent.put("serviceName", properties.getServiceName());
         logEvent.put("environment", properties.getEnvironment());
         logEvent.put("correlationId", correlationId);
-        logEvent.put("serviceDescription", properties.getServiceDescription());
+        logEvent.put("serviceId",
+                properties.getEndpointMappings().get(request.getMethod() + " " + request.getRequestURI()));
 
         ObjectNode http = objectMapper.createObjectNode();
         http.put("method", request.getMethod());
@@ -154,7 +155,7 @@ public class LogEventBuilder {
         if (request instanceof ContentCachingRequestWrapper wrapper) {
             byte[] buf = wrapper.getContentAsByteArray();
             if (buf.length > 0) {
-                return truncateBody(new String(buf, StandardCharsets.UTF_8));
+                return new String(buf, StandardCharsets.UTF_8);
             }
         }
         return "[empty]";
@@ -164,24 +165,10 @@ public class LogEventBuilder {
         if (response instanceof ContentCachingResponseWrapper wrapper) {
             byte[] buf = wrapper.getContentAsByteArray();
             if (buf.length > 0) {
-                return truncateBody(new String(buf, StandardCharsets.UTF_8));
+                return new String(buf, StandardCharsets.UTF_8);
             }
         }
         return "[empty]";
-    }
-
-    /**
-     * Truncates a body string if it exceeds the configured maximum size.
-     *
-     * @param body the full body string
-     * @return the body, truncated with a suffix if it exceeded the limit
-     */
-    private String truncateBody(String body) {
-        int maxSize = properties.getBodyMaxSize();
-        if (body.length() > maxSize) {
-            return body.substring(0, maxSize) + "...[TRUNCATED]";
-        }
-        return body;
     }
 
     private String resolveCorrelationId(HttpServletRequest request) {

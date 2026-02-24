@@ -26,7 +26,6 @@ class LogEventBuilderTest {
         properties = new CentralizedLogsProperties();
         properties.setServiceName("test-service");
         properties.setEnvironment("test");
-        properties.setBodyMaxSize(100);
         logEventBuilder = new LogEventBuilder(objectMapper, properties);
     }
 

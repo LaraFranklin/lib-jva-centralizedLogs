@@ -25,12 +25,12 @@ import java.util.Map;
  * centralized-logs.interceptor.enabled=true
  * centralized-logs.interceptor.exclude-paths=/actuator/**,/health
  * centralized-logs.sender.enabled=true
- * centralized-logs.body-max-size=10000
+ * centralized-logs.compression.enabled=false
  * centralized-logs.endpoint-mappings."GET /api/users"=get-all-users
  * centralized-logs.endpoint-mappings."POST /api/users"=create-user
  * </pre>
  *
- * @since 1.0.0
+ * @since 2.0.0
  */
 @Getter
 @Setter
@@ -42,9 +42,6 @@ public class CentralizedLogsProperties {
 
     /** Execution environment (dev, qa, prod). */
     private String environment = "unknown";
-
-    /** Description of the microservice using this library. */
-    private String serviceDescription = "";
 
     /** URL of the ActiveMQ Artemis broker. */
     private String brokerUrl = "tcp://localhost:61616";
@@ -64,11 +61,8 @@ public class CentralizedLogsProperties {
     /** Sender configuration. */
     private Sender sender = new Sender();
 
-    /**
-     * Maximum size in characters for request/response body capture. Bodies
-     * exceeding this limit are truncated.
-     */
-    private int bodyMaxSize = 10_000;
+    /** Compression configuration. */
+    private Compression compression = new Compression();
 
     /**
      * Map of endpoint patterns to descriptive identifiers.
@@ -134,5 +128,29 @@ public class CentralizedLogsProperties {
          * logged but not sent.
          */
         private boolean enabled = true;
+    }
+
+    /**
+     * GZIP compression settings for queue messages.
+     * <p>
+     * When enabled, the JSON message is compressed with GZIP before being sent
+     * to the Artemis queue as a {@code BytesMessage}. This reduces queue storage
+     * usage without losing any data.
+     * <p>
+     * When disabled (default), the JSON is sent as a plain {@code TextMessage}
+     * that is directly readable from the queue.
+     */
+    @Getter
+    @Setter
+    public static class Compression {
+        /**
+         * Whether GZIP compression is enabled for messages sent to Artemis.
+         * <ul>
+         * <li>{@code false} (default) — plain JSON, readable directly from queue</li>
+         * <li>{@code true} — GZIP compressed, saves space, consumer must
+         * decompress</li>
+         * </ul>
+         */
+        private boolean enabled = false;
     }
 }
