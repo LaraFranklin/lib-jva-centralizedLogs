@@ -1,0 +1,53 @@
+# ══════════════════════════════════════════════════════════════
+# Centralized Logs Library - Configuración de ejemplo
+# ══════════════════════════════════════════════════════════════
+# Copia este archivo a tu proyecto y renómbralo a
+# application.yml (o agrégalo dentro de tu application.yml existente).
+
+centralized-logs:
+
+  # ── Información del servicio ──────────────────────────────
+  service-name: my-service
+  environment: dev
+
+  # ── Conexión a Artemis ────────────────────────────────────
+  broker-url: tcp://localhost:61616
+  user: artemis
+  password: artemis
+
+  # ── Colas de destino ──────────────────────────────────────
+  queue:
+    logs: log.send
+    errors: log.errors
+
+  # ── Control del interceptor ───────────────────────────────
+  interceptor:
+    enabled: true
+    exclude-paths:
+      - /actuator/**
+      - /health
+      - /swagger-ui/**
+      - /v3/api-docs/**
+
+  # ── Control del sender ────────────────────────────────────
+  sender:
+    enabled: true
+
+  # ── Opciones avanzadas ────────────────────────────────────
+  body-max-size: 10000
+
+  # ── Endpoint Mappings ─────────────────────────────────────
+  # Mapea patrones "METHOD /path" a identificadores descriptivos.
+  # Útil para integraciones con bases de datos de logs centralizados.
+  #
+  # Wildcards soportados:
+  #   *   → un segmento de ruta  (e.g. /api/users/* matchea /api/users/123)
+  #   **  → múltiples segmentos  (e.g. /api/reports/** matchea /api/reports/2026/02)
+  #
+  # Si no hay match, se auto-genera como METHOD_/path (e.g. GET_/api/users)
+  endpoint-mappings:
+    "GET /api/users": "get-all-users"
+    "POST /api/users": "create-user"
+    "GET /api/users/*": "get-user-by-id"
+    "PUT /api/users/*": "update-user"
+    "DELETE /api/users/*": "delete-user"

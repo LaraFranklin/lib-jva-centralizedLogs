@@ -1,6 +1,5 @@
 package com.organization.lib.config;
 
-import com.organization.lib.config.CentralizedLogsProperties;
 import com.organization.lib.interceptor.RequestInterceptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

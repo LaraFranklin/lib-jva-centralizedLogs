@@ -22,7 +22,7 @@ Librería Java para la captura centralizada de logs HTTP mediante interceptores 
 <dependency>
     <groupId>com.organization</groupId>
     <artifactId>lib-jva-centralizedLogs</artifactId>
-    <version>2.0.0</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
@@ -72,6 +72,7 @@ centralized-logs.interceptor.exclude-paths=/actuator/**,/health,/swagger-ui/**,/
 | `centralized-logs.sender.enabled` | ❌ | `true` | Activa o desactiva el envío a Artemis |
 | `centralized-logs.body-max-size` | ❌ | `10000` | Tamaño máximo (en caracteres) del body capturado |
 | `centralized-logs.interceptor.exclude-paths` | ❌ | `/actuator/**,/health,...` | Rutas excluidas del interceptor |
+| `centralized-logs.endpoint-mappings` | ❌ | `{}` | Mapa de endpoints a IDs descriptivos (ver sección abajo) |
 
 ---
 
@@ -114,6 +115,7 @@ Cada petición HTTP interceptada genera el siguiente JSON en la cola:
   "serviceName": "payments-api",
   "environment": "qa",
   "correlationId": "7f9c2a1b0e2d4a6c",
+  "endpointId": "create-payment",
   "http": {
     "method": "POST",
     "path": "/v1/payments",
@@ -173,6 +175,35 @@ Para propagar el correlation ID desde tu cliente:
 ```
 x-correlation-id: 7f9c2a1b0e2d4a6c
 ```
+
+---
+
+## Endpoint Mappings (identificadores descriptivos)
+
+Para integraciones con bases de datos de logs centralizados donde necesitas un identificador descriptivo por endpoint, puedes configurar un mapa de patrones a IDs:
+
+```yaml
+centralized-logs:
+  endpoint-mappings:
+    "GET /api/users": "get-all-users"
+    "POST /api/users": "create-user"
+    "GET /api/users/*": "get-user-by-id"
+    "PUT /api/users/*": "update-user"
+    "DELETE /api/users/*": "delete-user"
+    "POST /api/payments": "create-payment"
+    "GET /api/payments/**": "get-payments"
+```
+
+### Reglas de resolución
+
+| Prioridad | Tipo | Ejemplo patrón | Ejemplo request | Resultado |
+|---|---|---|---|---|
+| 1 | Exacto | `GET /api/users` | `GET /api/users` | ✅ Match |
+| 2 | Wildcard `*` | `GET /api/users/*` | `GET /api/users/123` | ✅ Match (un segmento) |
+| 3 | Wildcard `**` | `GET /api/reports/**` | `GET /api/reports/2026/02` | ✅ Match (múltiples segmentos) |
+| 4 | Auto-generado | _(sin configurar)_ | `GET /api/health` | `GET_/api/health` |
+
+El campo `endpointId` aparece en cada evento JSON publicado en la cola. Si no configuras ningún mapping, se genera automáticamente en el formato `METHOD_/path`.
 
 ---
 

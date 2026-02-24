@@ -13,6 +13,7 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -100,6 +101,7 @@ public class LogEventBuilder {
         logEvent.put("serviceName", properties.getServiceName());
         logEvent.put("environment", properties.getEnvironment());
         logEvent.put("correlationId", correlationId);
+        logEvent.put("serviceDescription", properties.getServiceDescription());
 
         ObjectNode http = objectMapper.createObjectNode();
         http.put("method", request.getMethod());
@@ -185,6 +187,71 @@ public class LogEventBuilder {
     private String resolveCorrelationId(HttpServletRequest request) {
         String correlationId = request.getHeader("x-correlation-id");
         return correlationId != null ? correlationId : UUID.randomUUID().toString().replace("-", "");
+    }
+
+    /**
+     * Resolves the endpoint identifier for a given request.
+     * <p>
+     * Looks up the configured {@code endpoint-mappings} for a match using the
+     * format
+     * {@code "METHOD /path"}. Supports wildcard {@code *} for path segments.
+     * If no mapping matches, generates a default ID in the format
+     * {@code METHOD_/path}.
+     *
+     * @param request the HTTP request
+     * @return the resolved endpoint identifier
+     */
+    private String resolveEndpointId(HttpServletRequest request) {
+        String method = request.getMethod();
+        String path = request.getRequestURI();
+        String key = method + " " + path;
+
+        Map<String, String> mappings = properties.getEndpointMappings();
+
+        // Exact match
+        if (mappings.containsKey(key)) {
+            return mappings.get(key);
+        }
+
+        // Wildcard match: "GET /api/users/*" matches "GET /api/users/123"
+        for (Map.Entry<String, String> entry : mappings.entrySet()) {
+            if (matchesWildcard(entry.getKey(), key)) {
+                return entry.getValue();
+            }
+        }
+
+        // Auto-generate: "GET /api/users" → "GET_/api/users"
+        return method + "_" + path;
+    }
+
+    /**
+     * Matches a wildcard pattern against a value.
+     * Supports {@code *} as a single path segment wildcard and {@code **} as a
+     * multi-segment wildcard.
+     *
+     * @param pattern the pattern (e.g., "GET /api/users/*")
+     * @param value   the value to match (e.g., "GET /api/users/123")
+     * @return true if the pattern matches the value
+     */
+    private boolean matchesWildcard(String pattern, String value) {
+        String[] patternParts = pattern.split("/");
+        String[] valueParts = value.split("/");
+
+        if (patternParts.length != valueParts.length) {
+            // Check for ** (match any number of remaining segments)
+            if (pattern.contains("/**")) {
+                String prefix = pattern.substring(0, pattern.indexOf("/**"));
+                return value.startsWith(prefix);
+            }
+            return false;
+        }
+
+        for (int i = 0; i < patternParts.length; i++) {
+            if (!patternParts[i].equals("*") && !patternParts[i].equals(valueParts[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private Object parseJson(String raw) {

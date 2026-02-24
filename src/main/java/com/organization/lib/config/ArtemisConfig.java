@@ -1,6 +1,5 @@
 package com.organization.lib.config;
 
-import com.organization.lib.config.CentralizedLogsProperties;
 import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import lombok.RequiredArgsConstructor;
