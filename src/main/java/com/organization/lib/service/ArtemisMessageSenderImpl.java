@@ -58,7 +58,7 @@ public class ArtemisMessageSenderImpl implements ArtemisMessageSender {
                 jmsTemplate.send(queueName, session -> {
                     var bytesMessage = session.createBytesMessage();
                     bytesMessage.writeBytes(compressed);
-                    bytesMessage.setStringProperty("Content-Encoding", "gzip");
+                    bytesMessage.setStringProperty("ContentEncoding", "gzip");
                     return bytesMessage;
                 });
                 log.debug("Compressed message sent to queue '{}' ({} bytes -> {} bytes)",

@@ -95,7 +95,7 @@ class ArtemisMessageSenderImplTest {
 
         // Verify BytesMessage was created and Content-Encoding was set
         verify(session).createBytesMessage();
-        verify(bytesMessage).setStringProperty("Content-Encoding", "gzip");
+        verify(bytesMessage).setStringProperty("ContentEncoding", "gzip");
     }
 
     @Test
@@ -112,23 +112,35 @@ class ArtemisMessageSenderImplTest {
     @Test
     @DisplayName("Compressed data should be valid GZIP and decompress to original")
     void testCompressionDecompression() throws Exception {
-        // Test the compression utility directly via reflection-free approach
-        // Compress using same algorithm as the implementation
+        // Use a realistic-size JSON payload that GZIP can actually compress
+        String largeMessage = "{\"eventId\":\"c2c2f6a8-3d2d-4f8a-8b1f-5d4b2a3a9d10\","
+                + "\"timestamp\":\"2026-02-18T11:35:58.123Z\","
+                + "\"serviceName\":\"payments-api\",\"environment\":\"qa\","
+                + "\"correlationId\":\"7f9c2a1b0e2d4a6c\","
+                + "\"endpointId\":\"create-payment\","
+                + "\"http\":{\"method\":\"POST\",\"path\":\"/v1/payments\",\"queryString\":\"\",\"statusCode\":201},"
+                + "\"durationMs\":42,"
+                + "\"client\":{\"ip\":\"10.10.10.10\",\"userAgent\":\"Mozilla/5.0\"},"
+                + "\"request\":{\"headers\":{\"content-type\":\"application/json\"},\"body\":{\"amount\":100.50}},"
+                + "\"response\":{\"headers\":{\"content-type\":\"application/json\"},\"body\":{\"id\":1,\"status\":\"OK\"}},"
+                + "\"result\":\"SUCCESS\"}";
+
+        // Compress
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (java.util.zip.GZIPOutputStream gzip = new java.util.zip.GZIPOutputStream(baos)) {
-            gzip.write(TEST_MESSAGE.getBytes(StandardCharsets.UTF_8));
+            gzip.write(largeMessage.getBytes(StandardCharsets.UTF_8));
         }
         byte[] compressed = baos.toByteArray();
 
-        // Decompress and verify
+        // Decompress and verify round-trip
         ByteArrayInputStream bais = new ByteArrayInputStream(compressed);
         try (GZIPInputStream gzipIn = new GZIPInputStream(bais)) {
             String decompressed = new String(gzipIn.readAllBytes(), StandardCharsets.UTF_8);
-            assertEquals(TEST_MESSAGE, decompressed);
+            assertEquals(largeMessage, decompressed);
         }
 
-        // Verify compression actually reduces size for typical JSON
-        assertTrue(compressed.length < TEST_MESSAGE.getBytes(StandardCharsets.UTF_8).length,
+        // Verify compression reduces size for typical JSON
+        assertTrue(compressed.length < largeMessage.getBytes(StandardCharsets.UTF_8).length,
                 "Compressed data should be smaller than original for typical JSON");
     }
 }

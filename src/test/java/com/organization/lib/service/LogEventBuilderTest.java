@@ -125,14 +125,14 @@ class LogEventBuilderTest {
     @DisplayName("Should capture request headers")
     void testCaptureRequestHeaders() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/users");
-        request.addHeader("content-type", "application/json");
+        request.addHeader("Content-Type", "application/json");
         request.addHeader("authorization", "Bearer token123");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         String json = logEventBuilder.buildSuccessEvent(request, response, 5);
 
         JsonNode node = objectMapper.readTree(json);
-        assertEquals("application/json", node.path("request").path("headers").get("content-type").asText());
+        assertEquals("application/json", node.path("request").path("headers").get("Content-Type").asText());
     }
 
     @Test

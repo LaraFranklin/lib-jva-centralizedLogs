@@ -101,8 +101,7 @@ public class LogEventBuilder {
         logEvent.put("serviceName", properties.getServiceName());
         logEvent.put("environment", properties.getEnvironment());
         logEvent.put("correlationId", correlationId);
-        logEvent.put("serviceId",
-                properties.getEndpointMappings().get(request.getMethod() + " " + request.getRequestURI()));
+        logEvent.put("endpointId", resolveEndpointId(request));
 
         ObjectNode http = objectMapper.createObjectNode();
         http.put("method", request.getMethod());
