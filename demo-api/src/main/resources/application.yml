@@ -1,0 +1,56 @@
+# ══════════════════════════════════════════════════════════════
+# Demo API - Configuración de Centralized Logs Library
+# ══════════════════════════════════════════════════════════════
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: demo-centralized-logs
+
+# ── Configuración de la librería ────────────────────────────
+centralized-logs:
+  service-name: demo-api
+  environment: local
+
+  # Conexión a Artemis (Docker)
+  broker-url: tcp://localhost:61616
+  user: artemis
+  password: artemis
+
+  # Colas
+  queue:
+    logs: log.send
+    errors: log.errors
+
+  # Interceptor
+  interceptor:
+    enabled: true
+    exclude-paths:
+      - /actuator/**
+      - /health
+
+  # Sender
+  sender:
+    enabled: true
+
+  # Compresión (cambiar a true para probar GZIP)
+  compression:
+    enabled: true
+
+  # Endpoint mappings
+  endpoint-mappings:
+    "GET /api/users": "get-all-users"
+    "POST /api/users": "create-user"
+    "GET /api/users/*": "get-user-by-id"
+    "PUT /api/users/*": "update-user"
+    "DELETE /api/users/*": "delete-user"
+    "GET /api/products": "get-all-products"
+    "POST /api/products": "create-product"
+
+# ── Logging ─────────────────────────────────────────────────
+logging:
+  level:
+    com.organization.lib: DEBUG
+    com.example.demo: DEBUG

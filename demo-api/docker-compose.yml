@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  artemis:
+    image: apache/activemq-artemis:2.37.0
+    container_name: artemis-local
+    ports:
+      - "61616:61616"   # JMS / AMQP
+      - "8161:8161"     # Web Console
+    environment:
+      ARTEMIS_USER: artemis
+      ARTEMIS_PASSWORD: artemis
+      ANONYMOUS_LOGIN: "false"
+    volumes:
+      - artemis-data:/var/lib/artemis-instance
+
+volumes:
+  artemis-data:
